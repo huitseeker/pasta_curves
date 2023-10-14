@@ -10,6 +10,8 @@ use pasta_curves::Fq;
 fn criterion_benchmark(c: &mut Criterion) {
     let mut group = c.benchmark_group("Fq");
 
+    group.bench_function("eqz", bench_fq_eqz);
+    group.bench_function("eqone", bench_fq_eq_one);
     group.bench_function("double", bench_fq_double);
     group.bench_function("add_assign", bench_fq_add_assign);
     group.bench_function("sub_assign", bench_fq_sub_assign);
@@ -20,6 +22,44 @@ fn criterion_benchmark(c: &mut Criterion) {
     group.bench_function("sqrt", bench_fq_sqrt);
     group.bench_function("to_repr", bench_fq_to_repr);
     group.bench_function("from_repr", bench_fq_from_repr);
+}
+
+fn bench_fq_eqz(b: &mut Bencher) {
+    const SAMPLES: usize = 1000;
+
+    let mut rng = XorShiftRng::from_seed([
+        0x59, 0x62, 0xbe, 0x5d, 0x76, 0x3d, 0x31, 0x8d, 0x17, 0xdb, 0x37, 0x32, 0x54, 0x06, 0xbc,
+        0xe5,
+    ]);
+
+    let v: Vec<Fq> = (0..SAMPLES).map(|_| Fq::random(&mut rng)).collect();
+
+    let mut count = 0;
+    b.iter(|| {
+        let tmp = v[count];
+        let b = tmp.is_zero_vartime();
+        count = (count + 1) % SAMPLES;
+        b
+    });
+}
+
+fn bench_fq_eq_one(b: &mut Bencher) {
+    const SAMPLES: usize = 1000;
+
+    let mut rng = XorShiftRng::from_seed([
+        0x59, 0x62, 0xbe, 0x5d, 0x76, 0x3d, 0x31, 0x8d, 0x17, 0xdb, 0x37, 0x32, 0x54, 0x06, 0xbc,
+        0xe5,
+    ]);
+
+    let v: Vec<Fq> = (0..SAMPLES).map(|_| Fq::random(&mut rng)).collect();
+
+    let mut count = 0;
+    b.iter(|| {
+        let tmp = v[count];
+        let b = tmp == Fq::one();
+        count = (count + 1) % SAMPLES;
+        b
+    });
 }
 
 fn bench_fq_double(b: &mut Bencher) {
